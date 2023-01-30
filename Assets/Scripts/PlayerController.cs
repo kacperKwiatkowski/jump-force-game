@@ -9,24 +9,32 @@ public class PlayerController : MonoBehaviour
     public float gravityModifier;
     public bool isOnGround;
     public bool isGameOver;
+    public ParticleSystem explosionParticle;
+    public ParticleSystem dirtParticle;    
+    public AudioClip crashSound;
+    public AudioClip jumpSound;
     private Rigidbody playerRb;
-    private Animator playerAnim; 
+    private Animator playerAnim;
+    private AudioSource playerAudio; 
     
     // Start is called before the first frame update
     void Start()
     {
         playerRb = GetComponent<Rigidbody>(); 
-        playerAnim = GetComponent<Animator>();
+        playerAnim = GetComponent<Animator>(); 
+        playerAudio = GetComponent<AudioSource>();
         Physics.gravity *= gravityModifier;
     }
 
     private void Update()
     {
-        if(Input.GetKeyDown(KeyCode.Space) && isOnGround)
+        if(Input.GetKeyDown(KeyCode.Space) && isOnGround && !isGameOver)
         {
             playerAnim.SetTrigger("Jump_trig");
             playerRb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
             isOnGround = false;
+            dirtParticle.Stop();
+            playerAudio.PlayOneShot(jumpSound, 1.0f);
         }
     }
 
@@ -35,12 +43,16 @@ public class PlayerController : MonoBehaviour
         if (collision.gameObject.CompareTag("Ground"))
         {
             isOnGround = true;
+            dirtParticle.Play();
         } else if (collision.gameObject.CompareTag("Obstacle"))
         {
             Debug.Log("Game Over");
             isGameOver = true;
             playerAnim.SetBool("Death_b", true);
             playerAnim.SetInteger("DeathType_int", 1);
+            dirtParticle.Stop();
+            explosionParticle.Play();
+            playerAudio.PlayOneShot(crashSound, 1.0f);
         }
     }
 }
